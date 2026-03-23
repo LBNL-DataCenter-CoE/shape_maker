@@ -1,0 +1,22 @@
+# Specify the build backend
+[build-system]
+requires = ["setuptools>=42", "wheel"]
+build-backend = "setuptools.build_meta"
+
+# Specify basic metadata
+[project]
+name = "shape_maker"
+version = "0.1.0"
+license = {text = "ETA EAEI EES software"}
+authors = [
+    {name = "EES"}
+]
+requires-python = ">=3.10"
+dependencies = [
+    "pandas",
+    "numpy",
+    "matplotlib",
+    "notebook",
+    "seaborn",
+    "plotly"
+]
