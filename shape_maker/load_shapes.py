@@ -240,6 +240,7 @@ def generate_specific_it_load_profiles(
         random_state = None,
         num_days=365,
         start_date=datetime(2025, 1, 1),
+        hourly_averaging=True,
     ):
 
     if noise_style=="low_noise":
@@ -373,7 +374,7 @@ def generate_specific_it_load_profiles(
     if (points_per_hr - np.floor(points_per_hr)) > 0: 
         raise ValueError("your data is not easily divisible into hour increments. 5, 15 or 60 minute intervals are recommended.")
     
-    if interval != 60:
+    if interval != 60 and hourly_averaging==True:
         yearly_load_profile_for_power_components = average_hourly_load(yearly_load_profile_for_power_components,int(points_per_hr))
 
     return yearly_load_profile_for_power_components
