@@ -8,7 +8,15 @@ import pandas as pd
 def logistic_function(x, L, k, x0):
     return L / (1 + np.exp(-k * (x - x0)))
 
-def generate_daily_load_profile(l0, peak_params=[{'start_time': 6 * 60, 'duration': 8*60, 'part_load': 0.6}], interval=5, transition_duration=30, transition_smoothness=10.0):
+def generate_daily_load_profile(
+        l0, 
+        peak_params=[{'start_time': 6 * 60, 'duration': 8*60, 'part_load': 0.6}], 
+        noise_random_frac_of_l0=None, 
+        interval=5, 
+        transition_duration=30, 
+        transition_smoothness=10.0, 
+        random_state=None
+    ):
     total_minutes = 24 * 60  # Total minutes in a day
     time_minutes = np.arange(0, total_minutes, interval)
     load_profile = np.full_like(time_minutes, l0, dtype=float)
@@ -43,6 +51,14 @@ def generate_daily_load_profile(l0, peak_params=[{'start_time': 6 * 60, 'duratio
             x_values = (decrease_indices - transition_down_start_index) / (transition_down_end_index - transition_down_start_index)
             load_profile[decrease_indices] = yi - (yi - l0) * logistic_function(x_values, 1, transition_smoothness, 0.5)
 
+    if noise_random_frac_of_l0 is not None:
+        if random_state is None:
+            random_state = np.random.RandomState()
+
+        noise_range = l0 * noise_random_frac_of_l0
+        random_variation = random_state.uniform(-noise_range, noise_range, size=len(time_minutes))
+        load_profile += random_variation
+    
     return load_profile
 
 def generate_yearly_load_profile(l0, weekday_peak_values, weekday_dynamic_range,
@@ -264,6 +280,24 @@ def generate_specific_it_load_profiles(
 
         l0_corrected = correct_l0(l0, average_weekday_duration, average_weekend_duration, average_weekday_increase, average_weekend_increase)
     
+    elif diurnal_style=="business_high_diurnal":
+        weekday_peak_duration=9*60
+        weekend_peak_duration=0.
+        
+        peak_load_possible_weekday_time_range=(8 * 60, 17 * 60)
+        peak_load_possible_weekend_time_range=(16 * 60, 21 * 60) # not relevant, as we keep weekend flat
+        weekday_peak_values = [1.35*l0,l0,l0]  # Possible peak load fractions for weekdays
+        weekday_peak_freqs=[1.,0,0]
+        weekend_peak_values = [l0,l0,l0]  # Possible peak load fractions for weekends
+        weekend_peak_freqs=[1.,0,0]
+
+        average_weekday_duration = (peak_load_possible_weekday_time_range[1] - peak_load_possible_weekday_time_range[0])/60
+        average_weekend_duration = (peak_load_possible_weekend_time_range[1] - peak_load_possible_weekend_time_range[0])/60
+        average_weekday_increase = (np.array(weekday_peak_values) * np.array(weekday_peak_freqs)).sum() - l0
+        average_weekend_increase = (np.array(weekend_peak_values) * np.array(weekend_peak_freqs)).sum() - l0
+
+        l0_corrected = correct_l0(l0, average_weekday_duration, average_weekend_duration, average_weekday_increase, average_weekend_increase)
+
     elif diurnal_style=="customer_diurnal":
         weekday_peak_duration=5*60
         weekend_peak_duration=5*60
@@ -273,6 +307,24 @@ def generate_specific_it_load_profiles(
         weekday_peak_values = [1.1*l0,l0,l0]  # Possible peak load fractions for weekdays
         weekday_peak_freqs=[1.,0,0] # just one peak level
         weekend_peak_values = [1.1*l0,l0,l0]  # Possible peak load fractions for weekends
+        weekend_peak_freqs=[1.,0,0]
+
+        average_weekday_duration = (peak_load_possible_weekday_time_range[1] - peak_load_possible_weekday_time_range[0])/60
+        average_weekend_duration = (peak_load_possible_weekend_time_range[1] - peak_load_possible_weekend_time_range[0])/60
+        average_weekday_increase = (np.array(weekday_peak_values) * np.array(weekday_peak_freqs)).sum() - l0
+        average_weekend_increase = (np.array(weekend_peak_values) * np.array(weekend_peak_freqs)).sum() - l0
+
+        l0_corrected = correct_l0(l0, average_weekday_duration, average_weekend_duration, average_weekday_increase, average_weekend_increase)
+
+    elif diurnal_style=="customer_high_diurnal":
+        weekday_peak_duration=5*60
+        weekend_peak_duration=5*60
+        
+        peak_load_possible_weekday_time_range=(16 * 60, 21 * 60)
+        peak_load_possible_weekend_time_range=(16 * 60, 21 * 60)
+        weekday_peak_values = [1.35*l0,l0,l0]  # Possible peak load fractions for weekdays
+        weekday_peak_freqs=[1.,0,0] # just one peak level
+        weekend_peak_values = [1.35*l0,l0,l0]  # Possible peak load fractions for weekends
         weekend_peak_freqs=[1.,0,0]
 
         average_weekday_duration = (peak_load_possible_weekday_time_range[1] - peak_load_possible_weekday_time_range[0])/60
