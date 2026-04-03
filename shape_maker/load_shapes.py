@@ -61,9 +61,12 @@ def generate_daily_load_profile(
     
     return load_profile
 
-def generate_yearly_load_profile(l0, weekday_peak_values, weekday_dynamic_range,
-                                 weekend_peak_values, weekend_dynamic_range, 
-                                 interval,
+def generate_yearly_load_profile(l0=0.7, 
+                                 weekday_peak_values=[0.7,0.7,0.7], 
+                                 weekday_dynamic_range=0.,
+                                 weekend_peak_values=[0.7,0.7,0.7], 
+                                 weekend_dynamic_range=0., 
+                                 interval=60,
                                  weekday_peak_duration=8*60,
                                  weekday_peak_duration_variability=0,
                                  weekend_peak_duration=4*60,
@@ -147,18 +150,21 @@ def generate_yearly_load_profile(l0, weekday_peak_values, weekday_dynamic_range,
 
         # Generate daily load profile
         daily_load_profile = generate_daily_load_profile(
-            l0,
-            peak_params,
-            interval,
-            transition_duration,
-            transition_smoothness
+            l0, 
+            peak_params=peak_params, 
+            noise_random_frac_of_l0=None, 
+            interval=interval, 
+            transition_duration=transition_duration, 
+            transition_smoothness=transition_smoothness, 
+            random_state=random_state
         )
+  
         start_idx = day * total_intervals_per_day
         
         # Add the non-noised load profile to the yearly profile
         yearly_load_profile[start_idx:start_idx + total_intervals_per_day] = daily_load_profile
         
-        # Add to the noise load profile
+        # Add the noise to the load profile
         noise_range = l0 * random_state.uniform(minimum_noise_random_frac_of_l0, maximum_noise_random_frac_of_l0)
         noise_sampling_range[start_idx:start_idx + total_intervals_per_day] = noise_range
 
