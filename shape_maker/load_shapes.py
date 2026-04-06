@@ -383,9 +383,13 @@ def generate_specific_it_load_profiles(
     if interval != 60 and hourly_averaging==True:
         yearly_load_profile_for_power_components = average_hourly_load(yearly_load_profile_for_power_components,int(points_per_hr))
 
-    result = {'yearly_load_profile_for_power_components':yearly_load_profile_for_power_components, 'l0': l0_corrected}
+    yearly_load_profile_for_power_components.attrs['l0_corrected'] = l0_corrected
 
-    return result
+    return yearly_load_profile_for_power_components
+
+    # result = {'yearly_load_profile_for_power_components':yearly_load_profile_for_power_components, 'l0': l0_corrected}
+
+    # return result
 
 def create_power_components_dataset(yearly_itload_profile, fractional_itload_components, flat_loads_as_percent_of_itcapacity, itload_following_load_efficiencies, file_name=None, save=False):
 
