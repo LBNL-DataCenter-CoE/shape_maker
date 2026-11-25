@@ -105,27 +105,20 @@ def generate_yearly_load_profile(l0=0.7,
 
     current_date = start_date
     for day in range(num_days):
-        if current_date.weekday() < 5:  # Weekday
+        if current_date.weekday() < 5 and current_date not in us_holidays.values():
             possible_time_range = peak_load_possible_weekday_time_range
             peak_values = weekday_peak_values
             variation_range = weekday_dynamic_range
             peak_freqs = weekday_peak_freqs
             peak_duration = weekday_peak_duration
             peak_duration_variability = weekday_peak_duration_variability
-        else:  # Weekend
+        else:  # Weekends and holidays
             possible_time_range = peak_load_possible_weekend_time_range
             peak_values = weekend_peak_values
             variation_range = weekend_dynamic_range
             peak_freqs = weekend_peak_freqs
             peak_duration = weekend_peak_duration
             peak_duration_variability = weekend_peak_duration_variability
-
-        # Check if the current date is a holiday
-        if current_date in us_holidays.values():
-            possible_time_range = peak_load_possible_weekend_time_range
-            peak_values = weekend_peak_values
-            variation_range = weekend_dynamic_range
-            peak_freqs = weekend_peak_freqs
 
         # Determine number of peak periods for the day
         num_peaks = random_state.choice([1, 2, 3], p=peak_freqs)
